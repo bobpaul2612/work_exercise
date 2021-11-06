@@ -6,15 +6,15 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
-#include"client_socket.h"
+#include"clientSocket.h"
 
 using namespace std;
 
-Client_socket::~Client_socket(){
+ClientSocket::~ClientSocket(){
     close(socketfd);
 }
 
-int Client_socket::create_socket_connection(const char* ip_addr, int port){
+int ClientSocket::createSocketConnection(const char* ip_addr, int port){
     socketfd = socket(AF_INET,  SOCK_STREAM, 0);
 
     if(socketfd == -1){
@@ -36,6 +36,8 @@ int Client_socket::create_socket_connection(const char* ip_addr, int port){
     return socketfd;
 }
 
-int Client_socket::send_message(const char* msg){
+int ClientSocket::sendMessage(const char* msg){
+    printf("%s\n", msg);
     send(socketfd, msg, sizeof(msg), 0);
+    close(socketfd);
 }
