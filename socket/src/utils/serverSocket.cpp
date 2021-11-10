@@ -6,6 +6,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<unistd.h>
 #include"serverSocket.h"
 
 using namespace std;
@@ -31,20 +32,12 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
     server_info.sin_addr.s_addr = INADDR_ANY;
     server_info.sin_port = htons(port);
     bind(socketfd, (struct sockaddr *)&server_info, sizeof(server_info));
-    listen(socketfd, 5);
-
-    for(int i = 0; i < MAX_CLIENT_SOCKET;){
-        clientSocket[i] = addNewClientSocket();
-        
-    }
-
-    // for_clientfd = accept(socketfd, (struct sockaddr*) &client_info, &addrlen);
-    // while(1){
-    //     recv(for_clientfd, input_buffer, sizeof(input_buffer), 0);
-    //     printf("Get:%s\n",input_buffer);
-    //     // close(for_clientfd);
-    // }
-
+    
+    addNewClientSocket(); 
+    do{
+        printf("%s\n",getClientMsg());
+        sleep(3);
+    }while(clientSockets.size() > 0);
     return 0;
 }
 
@@ -53,19 +46,33 @@ int ServerSocket::addNewClientSocket(){
     listen(socketfd, 5);
     newClient = accept(socketfd, NULL, NULL);
 
+    clientSockets.push_back(newClient);
+
     return newClient;
 }
 
 char* ServerSocket::getClientMsg(){
     int i = 0;
     int received = -1;
-    char receiveMsg[256] = {};
 
-    while(i<3){
-        // received = recv()
-    }
+    char *clientRes = (char*)malloc(256 * sizeof(char));
+    char *fullClientRes = (char*)malloc(256 * sizeof(char));
 
-    // receiveMsg = recv(clientSocket, )
+    do {
+        *fullClientRes = '\0';
+        do{
+            *clientRes = '\0';
+            received = recv(clientSockets[0], clientRes, sizeof(clientRes), 0);
+            printf("%d : %s\n", received, clientRes);
+            if(received > 0){
+                strcat(fullClientRes, strcat(clientRes, " "));
+            }
+            
+        } while (received > 0);
+        i++;
+    } while (*fullClientRes == '\0' && i < 1);
+    
+    return fullClientRes;
 }
 
 // char *checkNewMessage(int clients_sockets[])
