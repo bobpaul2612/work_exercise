@@ -9,7 +9,7 @@ int main(){
     ClientSocket mySocket;
     res = mySocket.createSocketConnection("127.0.0.1", 8788);
     // for(int i = 0; i < 5; i++){
-    mySocket.sendMessage("Hi there123");
+    mySocket.sendMessage("Hi there : ");
     // }
     // cout << res << '\n';
     return 0;

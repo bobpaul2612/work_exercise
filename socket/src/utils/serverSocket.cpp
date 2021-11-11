@@ -12,90 +12,113 @@
 using namespace std;
 
 ServerSocket::~ServerSocket(){
-    close(socketfd);
+    close(masterSocket);
 }
 
 int ServerSocket::startSocketServer(const char* ip_addr, int port){
+    int opt = TRUE;
     char input_buffer[256] = {};
-    
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    
-    if(socketfd == -1){
-        printf("Fail to create a socket.");
-    }
-
+    int maxSd, sd, activity;
     sockaddr_in server_info, client_info;
+    fd_set readFds;
+
     unsigned int addrlen = sizeof(client_info);
     bzero(&server_info, sizeof(server_info));
+
+    if((masterSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0){
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if(setsockopt(masterSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0){
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    
 
     server_info.sin_family = PF_INET;
     server_info.sin_addr.s_addr = INADDR_ANY;
     server_info.sin_port = htons(port);
-    bind(socketfd, (struct sockaddr *)&server_info, sizeof(server_info));
+    if(bind(masterSocket, (struct sockaddr *)&server_info, sizeof(server_info)) < 0){
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
     
-    addNewClientSocket(); 
-    do{
-        printf("%s\n",getClientMsg());
-        sleep(3);
-    }while(clientSockets.size() > 0);
+    if(listen(masterSocket, 5) < 0){
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    while(TRUE){
+        FD_ZERO(&readFds);
+
+        FD_SET(masterSocket, &readFds);
+        maxSd = masterSocket;
+
+        for(int i = 0; i < MAX_CLIENT_SOCKET; i++){
+            sd = clientSockets[i];
+
+            if(sd > 0)
+                FD_SET(sd, &readFds);
+            if(sd > maxSd)
+                maxSd = sd;
+        }
+
+        activity = select(maxSd + 1, &readFds, NULL, NULL, NULL);
+        if((activity < 0) && (errno!=EINTR)){
+            printf("select error");
+        }
+
+        if(FD_ISSET(masterSocket, &readFds)){
+            addNewClientSocket(server_info);
+        }
+
+        getClientMsg(readFds);
+    }
+    // addNewClientSocket(); 
+    // do{
+    //     getClientMsg();
+    //     sleep(3);
+    // }while(clientSockets.size() > 0);
     return 0;
 }
 
-int ServerSocket::addNewClientSocket(){
+int ServerSocket::addNewClientSocket(sockaddr_in serverInfo){
     int newClient = -1;
-    listen(socketfd, 5);
-    newClient = accept(socketfd, NULL, NULL);
 
-    clientSockets.push_back(newClient);
+    if((newClient = accept(masterSocket, 
+        (struct sockaddr *)&serverInfo, (socklen_t*)&serverInfo)) < 0){
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    for(int i = 0; i < MAX_CLIENT_SOCKET; i++){
+        if(clientSockets[i] == 0){
+            clientSockets[i] = newClient;
+            break;
+        }
+    }
 
     return newClient;
 }
 
-char* ServerSocket::getClientMsg(){
-    int i = 0;
-    int received = -1;
+void ServerSocket::getClientMsg(fd_set readFds){
+    int sd, received;
+    char *clientMsg = (char*)malloc(256 * sizeof(char));
 
-    char *clientRes = (char*)malloc(256 * sizeof(char));
-    char *fullClientRes = (char*)malloc(256 * sizeof(char));
-
-    do {
-        *fullClientRes = '\0';
-        do{
-            *clientRes = '\0';
-            received = recv(clientSockets[0], clientRes, sizeof(clientRes), 0);
-            printf("%d : %s\n", received, clientRes);
-            if(received > 0){
-                strcat(fullClientRes, strcat(clientRes, " "));
+    for(int i = 0; i < MAX_CLIENT_SOCKET; i++){
+        sd = clientSockets[i];
+        if(FD_ISSET(sd, &readFds)){
+            if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
+                close(sd);
+                clientSockets[i] = 0;
             }
-            
-        } while (received > 0);
-        i++;
-    } while (*fullClientRes == '\0' && i < 1);
+            else{
+                clientMsg[received] = '\0';
+                printf("cliID : %d, Msg : %s \n", sd, clientMsg);
+            }
+        }
+    }
     
-    return fullClientRes;
 }
 
-// char *checkNewMessage(int clients_sockets[])
-// {
-//     int i = 0;
-//     int received;
-//     char *client_response = NULL;
-//     char *full_client_response = NULL;
-
-//     client_response = malloc(256 * sizeof(char));
-//     full_client_response = malloc(256 * sizeof(char));
-
-
-//     do {
-//         *full_client_response = '\0';
-//         do {
-//             *client_response = '\0';
-//             received = recv(clients_sockets[i], client_response,sizeof(client_response),0);
-//             if (received > 0){
-//                 strcat(full_client_response, strcat(client_response, " "));
-//             }
-//         } while (received > 0);
-//         i++;
-//     } while ((i<3) && (*full_client_response == '\0'));
-//     return full_client_response;
-// }

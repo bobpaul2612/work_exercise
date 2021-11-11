@@ -37,11 +37,26 @@ int ClientSocket::createSocketConnection(const char* ip_addr, int port){
 }
 
 int ClientSocket::sendMessage(const char* msg){
-    printf("%d: %s\n", (int)sizeof(msg), msg);
-    send(socketfd, msg, sizeof(msg)*2, 0);
-    while(1){
-        send(socketfd, msg, sizeof(msg)*2, 0);
+    char *sendMsg = (char*)malloc(256 * sizeof(char));
+    printf("%d: %s\n", (int)strlen(msg), msg);
+    int len = (int)strlen(msg);
+
+    for(int i = 0; i < 10; i++){
+        bzero(sendMsg, 256);
+        char num[2];
+        num[0] = i + '0';
+        num[1] = '\0';
+        
+        strcat(sendMsg, msg);
+        strcat(sendMsg, num);
+        
+        write(socketfd, sendMsg, strlen(sendMsg));
         sleep(6);
     }
+
+    // while(1){
+    //     send(socketfd, msg, strlen(msg), 0);
+    //     sleep(6);
+    // }
     close(socketfd);
 }
