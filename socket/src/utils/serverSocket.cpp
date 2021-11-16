@@ -9,6 +9,7 @@
 #include<unistd.h>
 #include<functional>
 #include<thread>
+#include<time.h>
 #include"serverSocket.h"
 
 using namespace std;
@@ -18,9 +19,9 @@ ServerSocket::~ServerSocket(){
 }
 
 int ServerSocket::startSocketServer(const char* ip_addr, int port){
-    int opt = TRUE;
+    int opt = true;
     char input_buffer[256] = {};
-    int maxSd, sd, activity;
+    int sd, activity;
     sockaddr_in server_info, client_info;
     fd_set readFds;
 
@@ -51,7 +52,7 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
         exit(EXIT_FAILURE);
     }
 
-    while(TRUE){
+    while(true){
         FD_ZERO(&readFds);
 
         FD_SET(masterSocket, &readFds);
@@ -72,9 +73,8 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
         }
 
         if(FD_ISSET(masterSocket, &readFds)){
-            int i = addNewClientSocket(server_info, readFds);
-            getSocket *newReadFds = new getSocket(i, readFds);
-            threads[i] = thread(bind(&ServerSocket::getClientMsg, this, newReadFds));
+            int i = addNewClientSocket(server_info);
+            threads[i] = thread(bind(&ServerSocket::getClientMsg, this, i));
             threads[i].detach();
         }
         
@@ -84,7 +84,7 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
     return 0;
 }
 
-int ServerSocket::addNewClientSocket(sockaddr_in serverInfo, fd_set readFds){
+int ServerSocket::addNewClientSocket(sockaddr_in serverInfo){
     int newClient = -1, i;
     if((newClient = accept(masterSocket, 
         (struct sockaddr *)&serverInfo, (socklen_t*)&serverInfo)) < 0){
@@ -102,30 +102,37 @@ int ServerSocket::addNewClientSocket(sockaddr_in serverInfo, fd_set readFds){
     return i;
 }
 
-int ServerSocket::getClientMsg(getSocket *newReadFds){
-    int sd = clientSockets[newReadFds->i];
-    fd_set readFds = newReadFds->readFds;
+int ServerSocket::getClientMsg(int i){
+    int sd = clientSockets[i];
+    timeval timeout={3,0};
     printf("%d\n", sd);
     int received = 0;
-    char *clientMsg = (char*)malloc(256 * sizeof(char));
+    char *clientMsg = new char[256];
 
     while(true){
-    // select(maxSd + 1, &readFds, NULL, NULL, NULL);
+        // printf("aaa\n");
 
-    // if(FD_ISSET(sd, &readFds)){
-    //     printf("sadfsd");
-        if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
-            close(sd);
-            clientSockets[newReadFds->i] = 0;
-            return 0;
-        }
-        else{
-            clientMsg[received] = '\0';
-            printf("cliID : %d, Msg : %s \n", sd, clientMsg);
-        }
-    }   
-    // }
+        select(maxSd + 1, &readFds, NULL, NULL, &timeout);
+        // printf("bbb\n");
+        if(FD_ISSET(sd, &readFds)){
+            if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
+                close(sd);
+                clientSockets[i] = 0;
+                return 0;
+            }
+            else{
+                clientMsg[received] = '\0';
+                printf("cliID : %d, Msg : %s \n", sd, clientMsg);
+            }
+        }      
+    }
     
     return -1;
 }
 
+/* 
+1.斷線 error handler
+2.use select
+3.命名
+4.有使用到 new 的都要清掉 (or unique_ptr)
+*/
