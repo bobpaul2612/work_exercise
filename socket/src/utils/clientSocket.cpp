@@ -3,12 +3,16 @@
 #include<iostream>
 #include<cstring>
 #include<unistd.h>
+#include<thread>
+#include <charconv>
+#include<mutex>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include"clientSocket.h"
 
 using namespace std;
+
 
 ClientSocket::~ClientSocket(){
     close(socketfd);
@@ -36,27 +40,34 @@ int ClientSocket::createSocketConnection(const char* ip_addr, int port){
 }
 
 int ClientSocket::sendMessage(const char* msg){
+
     char *sendMsg = (char*)malloc(256 * sizeof(char));
-    printf("%d: %s\n", (int)strlen(msg), msg);
     int len = (int)strlen(msg);
 
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < MSG_TIMES; i++){
         bzero(sendMsg, 256);
-        char num[2];
-        num[0] = i + '0';
-        num[1] = '\0';
+        array<char, 64> num;
         
+        lock.lock();
+        to_chars(num.data(), num.data() + num.size(), msgIdx++);
+        lock.unlock();
+
         strcat(sendMsg, msg);
-        strcat(sendMsg, num);
+        
+        strcat(sendMsg, num.data());
+
+
         
         write(socketfd, sendMsg, strlen(sendMsg));
-        sleep(6);
+        sleep(1);
     }
 
-    // while(1){
-    //     send(socketfd, msg, strlen(msg), 0);
-    //     sleep(6);
-    // }
     close(socketfd);
     return socketfd;
+
+//     for(int i = 0; i < 10; i++)
+//         printf("%d: \"%s\"\n", (int)strlen(msg), msg);
+//     printf("send \"%s\" finish\n\n", msg);
+//     return 0;
 }
+

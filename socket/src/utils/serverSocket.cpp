@@ -7,6 +7,8 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<unistd.h>
+#include<functional>
+#include<thread>
 #include"serverSocket.h"
 
 using namespace std;
@@ -70,55 +72,60 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
         }
 
         if(FD_ISSET(masterSocket, &readFds)){
-            addNewClientSocket(server_info);
+            int i = addNewClientSocket(server_info, readFds);
+            getSocket *newReadFds = new getSocket(i, readFds);
+            threads[i] = thread(bind(&ServerSocket::getClientMsg, this, newReadFds));
+            threads[i].detach();
         }
-
-        getClientMsg(readFds);
+        
+        // getClientMsg(readFds);
     }
-    // addNewClientSocket(); 
-    // do{
-    //     getClientMsg();
-    //     sleep(3);
-    // }while(clientSockets.size() > 0);
+   
     return 0;
 }
 
-int ServerSocket::addNewClientSocket(sockaddr_in serverInfo){
-    int newClient = -1;
-
+int ServerSocket::addNewClientSocket(sockaddr_in serverInfo, fd_set readFds){
+    int newClient = -1, i;
     if((newClient = accept(masterSocket, 
         (struct sockaddr *)&serverInfo, (socklen_t*)&serverInfo)) < 0){
         perror("accept");
         exit(EXIT_FAILURE);
     }
 
-    for(int i = 0; i < MAX_CLIENT_SOCKET; i++){
+    for(i = 0; i < MAX_CLIENT_SOCKET; i++){
         if(clientSockets[i] == 0){
             clientSockets[i] = newClient;
             break;
         }
     }
-
-    return newClient;
+    
+    return i;
 }
 
-void ServerSocket::getClientMsg(fd_set readFds){
-    int sd, received;
+int ServerSocket::getClientMsg(getSocket *newReadFds){
+    int sd = clientSockets[newReadFds->i];
+    fd_set readFds = newReadFds->readFds;
+    printf("%d\n", sd);
+    int received = 0;
     char *clientMsg = (char*)malloc(256 * sizeof(char));
 
-    for(int i = 0; i < MAX_CLIENT_SOCKET; i++){
-        sd = clientSockets[i];
-        if(FD_ISSET(sd, &readFds)){
-            if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
-                close(sd);
-                clientSockets[i] = 0;
-            }
-            else{
-                clientMsg[received] = '\0';
-                printf("cliID : %d, Msg : %s \n", sd, clientMsg);
-            }
+    while(true){
+    // select(maxSd + 1, &readFds, NULL, NULL, NULL);
+
+    // if(FD_ISSET(sd, &readFds)){
+    //     printf("sadfsd");
+        if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
+            close(sd);
+            clientSockets[newReadFds->i] = 0;
+            return 0;
         }
-    }
+        else{
+            clientMsg[received] = '\0';
+            printf("cliID : %d, Msg : %s \n", sd, clientMsg);
+        }
+    }   
+    // }
     
+    return -1;
 }
 
