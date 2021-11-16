@@ -37,7 +37,7 @@ int ServerSocket::startSocketServer(const char* ip_addr, int port){
     
 
     server_info.sin_family = PF_INET;
-    server_info.sin_addr.s_addr = INADDR_ANY;
+    server_info.sin_addr.s_addr = inet_addr(ip_addr);
     server_info.sin_port = htons(port);
     if(bind(masterSocket, (struct sockaddr *)&server_info, sizeof(server_info)) < 0){
         perror("bind failed");

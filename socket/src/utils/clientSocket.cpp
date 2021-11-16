@@ -24,7 +24,6 @@ int ClientSocket::createSocketConnection(const char* ip_addr, int port){
     sockaddr_in info;
     bzero(&info,sizeof(info));
     info.sin_family = PF_INET;
-
     info.sin_addr.s_addr = inet_addr(ip_addr);
     info.sin_port = htons(port);
 
@@ -59,4 +58,5 @@ int ClientSocket::sendMessage(const char* msg){
     //     sleep(6);
     // }
     close(socketfd);
+    return socketfd;
 }
