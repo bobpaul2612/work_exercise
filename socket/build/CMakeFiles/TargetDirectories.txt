@@ -1,0 +1,6 @@
+/home/simon/Desktop/work_exercise/socket/build/CMakeFiles/rebuild_cache.dir
+/home/simon/Desktop/work_exercise/socket/build/CMakeFiles/edit_cache.dir
+/home/simon/Desktop/work_exercise/socket/build/src/CMakeFiles/rebuild_cache.dir
+/home/simon/Desktop/work_exercise/socket/build/src/CMakeFiles/edit_cache.dir
+/home/simon/Desktop/work_exercise/socket/build/src/CMakeFiles/client.dir
+/home/simon/Desktop/work_exercise/socket/build/src/CMakeFiles/server.dir

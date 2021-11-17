@@ -1,5 +1,6 @@
 #include<cstdio>
 #include<cstdlib>
+#include<cerrno>
 #include<iostream>
 #include<cstring>
 #include<algorithm>
@@ -54,19 +55,10 @@ int ServerSocket::start(const char* ip_addr, int port){
     }
 
     while(true){
-        FD_ZERO(&readFd);
-        FD_SET(masterSocket, &readFd);
-
-        activity = select(masterSocket + 1, &readFd, NULL, NULL, NULL);
-        if((activity < 0) && (errno!=EINTR)){
-            printf("select error");
-        }
-
-        if(FD_ISSET(masterSocket, &readFd)){
-            int i = addNewClientSocket(server_info);
-            threads[i] = thread(bind(&ServerSocket::getClientMsg, this, i));
-            threads[i].detach();
-        }
+        
+        int i = addNewClientSocket(server_info);
+        threads[i] = thread(bind(&ServerSocket::getClientMsg, this, i));
+        threads[i].detach();
         
     }
    
@@ -101,17 +93,23 @@ int ServerSocket::getClientMsg(int i){
 
     FD_ZERO(&readFd);
     FD_SET(sd, &readFd);
-
+    
     while(true){
         select(sd + 1, &readFd, NULL, NULL, NULL);
 
         if(FD_ISSET(sd, &readFd)){
-            if((received = read(sd, clientMsg, sizeof(clientMsg))) == 0){
+            received = read(sd, clientMsg, sizeof(clientMsg));
+            if(received == -1){
                 close(sd);
                 clientSockets[i] = 0;
+                printf("%s \n", strerror(errno));
+                return -1;
+            }else if(received == 0){
+                close(sd);
+                clientSockets[i] = 0;
+                printf("The msg from client(%d) end.\n", sd);
                 return 0;
-            }
-            else{
+            }else{
                 char *p;
                 p = find(clientMsg, clientMsg + received, '$');
                 if(p != clientMsg + received){
@@ -128,15 +126,9 @@ int ServerSocket::getClientMsg(int i){
         }      
     }
     
-    free(clientMsg);
-    free(resMsg);
+    delete [] resMsg;
+    delete [] clientMsg;
 
     return 1;
 }
 
-/* 
-1.斷線 error handler
-2.use select  V
-3.命名
-4.有使用到 new 的都要清掉 (or unique_ptr)
-*/

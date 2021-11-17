@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/simon/Desktop/work_exercise/socket/build/src",
+  "command": "/usr/bin/c++   -I/home/simon/Desktop/work_exercise/socket/src/../include    -std=c++14 -o CMakeFiles/client.dir/client.cpp.o -c /home/simon/Desktop/work_exercise/socket/src/client.cpp",
+  "file": "/home/simon/Desktop/work_exercise/socket/src/client.cpp"
+},
+{
+  "directory": "/home/simon/Desktop/work_exercise/socket/build/src",
+  "command": "/usr/bin/c++   -I/home/simon/Desktop/work_exercise/socket/src/../include    -std=c++14 -o CMakeFiles/client.dir/utils/clientSocket.cpp.o -c /home/simon/Desktop/work_exercise/socket/src/utils/clientSocket.cpp",
+  "file": "/home/simon/Desktop/work_exercise/socket/src/utils/clientSocket.cpp"
+},
+{
+  "directory": "/home/simon/Desktop/work_exercise/socket/build/src",
+  "command": "/usr/bin/c++   -I/home/simon/Desktop/work_exercise/socket/src/../include    -std=c++14 -o CMakeFiles/server.dir/server.cpp.o -c /home/simon/Desktop/work_exercise/socket/src/server.cpp",
+  "file": "/home/simon/Desktop/work_exercise/socket/src/server.cpp"
+},
+{
+  "directory": "/home/simon/Desktop/work_exercise/socket/build/src",
+  "command": "/usr/bin/c++   -I/home/simon/Desktop/work_exercise/socket/src/../include    -std=c++14 -o CMakeFiles/server.dir/utils/serverSocket.cpp.o -c /home/simon/Desktop/work_exercise/socket/src/utils/serverSocket.cpp",
+  "file": "/home/simon/Desktop/work_exercise/socket/src/utils/serverSocket.cpp"
+}
+]

@@ -3,7 +3,7 @@
 #include<mutex>
 using namespace std;
 
-#define MSG_TIMES 100
+#define MSG_TIMES 10
 
 class ClientSocket{
     private:
