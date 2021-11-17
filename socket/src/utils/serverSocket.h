@@ -20,13 +20,12 @@ class ServerSocket{
     private:
         int masterSocket = 0;
         int maxSd = 0;
-        fd_set readFds;
         vector<int> clientSockets;
         thread threads[MAX_CLIENT_SOCKET] = {};
     public:
         ServerSocket():clientSockets(MAX_CLIENT_SOCKET, 0){}
         ~ServerSocket();
-        int startSocketServer(const char* ip_addr, int port);
+        int start(const char* ip_addr, int port);
         int addNewClientSocket(sockaddr_in serverInfo);
         int getClientMsg(int i);
 };

@@ -53,9 +53,8 @@ int ClientSocket::sendMessage(const char* msg){
         lock.unlock();
 
         strcat(sendMsg, msg);
-        
         strcat(sendMsg, num.data());
-
+        strcat(sendMsg, "$"); 
 
         
         write(socketfd, sendMsg, strlen(sendMsg));
