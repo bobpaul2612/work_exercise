@@ -7,6 +7,6 @@ using namespace std;
 int main(){
     int res = 0;
     ServerSocket myServer;
-    myServer.startSocketServer("127.0.0.1", 8788);
+    myServer.start("127.0.0.1", 8788);
     return 0;
 }
